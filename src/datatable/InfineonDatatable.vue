@@ -110,7 +110,9 @@
 import {
   toRefs, computed, ref, onMounted, watch,
 } from 'vue';
-import json2Csv from 'json2csv/dist/json2csv.umd';
+import exportFromJSON from 'export-from-json';
+
+// import json2Csv from 'json2csv/dist/json2csv.umd';
 import DatatableRow from './InfineonDatatableRow.vue';
 import DatatablePager from './InfineonDatatablePager.vue';
 import DatatableSortIcon from './InfineonDatatableSortIcon.vue';
@@ -142,6 +144,9 @@ const realColumns = computed(() => columns.value
 
 const shownColumns = computed(() => realColumns.value
   .filter((c) => !c.hidable || !hiddenColumnKeys.value.includes(c.key)));
+
+const exportType = exportFromJSON.types.csv;
+const file = 'download';
 
 // reset page & item count when data changes
 watch(
@@ -239,7 +244,7 @@ function updatePageSize(size) {
 }
 
 async function exportCSV() {
-  const fields = shownColumns.value.map((col) => ({ label: col.title, value: col.key }));
+  const fields = shownColumns.value.map((col) => ({ [col.key]: col.title }));
   const transforms = (row) => Object.fromEntries(
     shownColumns.value.map((col) => [
       col.key,
@@ -247,19 +252,25 @@ async function exportCSV() {
     ]),
   );
 
-  const opts = { fields, transforms };
+  // const opts = { fields, transforms };
 
-  json2Csv.parseAsync(data.value, opts)
-    .then((csv) => {
-      const sep = 'sep=,\r\n';
-      const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
-      const blob = new Blob([BOM, csv], { type: 'text/csv;charset=utf-8' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'download.csv';
-      link.click();
-      URL.revokeObjectURL(link.href);
-    }).catch((err) => console.log('Error downloading file!'));
+  // json2Csv.parseAsync(data.value, opts)
+  //   .then((csv) => {
+  //     const sep = 'sep=,\r\n';
+  //     const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
+  //     const blob = new Blob([BOM, csv], { type: 'text/csv;charset=utf-8' });
+  //     const link = document.createElement('a');
+  //     link.href = URL.createObjectURL(blob);
+  //     link.download = 'download.csv';
+  //     link.click();
+  //     URL.revokeObjectURL(link.href);
+  //   }).catch((err) => console.log('Error downloading file!'));
+
+  // const data = exportData;
+
+  exportFromJSON({
+    data: data.value, file, fields: fields.value, exportType,
+  });
 }
 </script>
 
